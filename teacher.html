@@ -578,9 +578,9 @@ $('save').onclick=async()=>{
 
   try{
 
-    const ref=p.id
+    const ref=p.id||p.name
 
-      ? doc(db,'teacherPupils',p.id)
+      ? doc(db,'teacherPupils',ref)
 
       : doc(collection(db,'teacherPupils'));
 
