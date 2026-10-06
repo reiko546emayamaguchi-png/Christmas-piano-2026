@@ -284,9 +284,9 @@ function form(){
 
     holidays:$('holidays').value,
 
-    extras:$('extras').value
+    extras:$('extras').value,
 
-  };
+lessonCount:calculate({event:$('event').value,weekdays:[...document.querySelectorAll('#days input:checked')].map(x=>+x.value),holidays:$('holidays').value,extras:$('extras').value})  };
 
 }
 
