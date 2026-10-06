@@ -73,6 +73,7 @@ async function switchStudent(code){
       name:p.name||'', age:own.age||'', song:own.song||'',
       eventDate:p.event||'2026-12-12',
       weekdays:Array.isArray(p.weekdays)?p.weekdays:[],
+      lessonCount:p.lessonCount||0,
       holidays:p.holidays||'', extras:p.extras||'', days:own.days||{}
     });
     codeInput.value=code; renderTabs();
