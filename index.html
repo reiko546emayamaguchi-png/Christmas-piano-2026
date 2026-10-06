@@ -34,7 +34,8 @@ async function ensureAuth(){if(!auth.currentUser)await signInAnonymously(auth)}
 function studentPracticeKey(code){return 'christmas2026_practice_'+code}
 function saveCurrentPractice(){
   if(!active)return;
-  const d=window.practiceBridge.get();
+
+  if(!window.practiceBridge){return;}const d=window.practiceBridge.get();
   localStorage.setItem(studentPracticeKey(active),JSON.stringify({age:d.age||'',song:d.song||'',days:d.days||{}}));
 }
 function loadOwnPractice(code){
