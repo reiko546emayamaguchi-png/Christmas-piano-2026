@@ -1,643 +1,170 @@
- <!doctype html>
-
-<html lang="ja">
-
-<head>
-
-<meta charset="utf-8">
-
-<meta name="viewport" content="width=device-width,initial-scale=1">
-
-<title>クリスマス会2026｜先生用準備版</title>
-
-<style>
-
-*{box-sizing:border-box}
-
-body{margin:0;background:#f9f5eb;color:#304d38;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic ProN',sans-serif}
-
-.wrap{max-width:650px;margin:auto;padding:16px 14px 40px}
-
-header{background:#28583f;color:#fff;border-radius:20px;padding:22px;text-align:center}
-
-h1{font-size:25px;margin:0}
-
-header p{margin-bottom:0}
-
-.card{background:white;border:1.5px solid #d7c092;border-radius:18px;padding:17px;margin-top:15px}
-
-h2{font-size:19px;margin:0 0 14px}
-
-.warn{background:#fff0dc;color:#754d29;border-radius:12px;padding:12px;line-height:1.65;font-size:13px}
-
-label{display:block;font-weight:bold;margin:12px 0 5px}
-
-input:not([type=checkbox]),textarea,select{width:100%;font:inherit;font-size:16px;border:1px solid #c4c9bb;border-radius:10px;padding:12px;background:white}
-
-textarea{min-height:78px}
-
-.days{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-
-.days label{margin:0;background:#edf5e9;border-radius:10px;padding:10px 6px;display:flex;gap:5px;align-items:center;justify-content:center}
-
-.days input{width:20px;height:20px;accent-color:#28583f}
-
-.days label:has(input:checked){outline:2px solid #28583f;background:#d8ebd5}
-
-button{border:0;border-radius:11px;padding:13px 16px;background:#28583f;color:white;font-weight:700;font-size:16px;cursor:pointer}
-
-button.secondary{background:#f2ead9;color:#493b29}
-
-button.danger{background:#a33440}
-
-.actions{display:flex;gap:9px;margin-top:16px}
-
-.actions button{flex:1}
-
-.student{border:1px solid #d7c092;border-radius:12px;padding:12px;margin-top:10px}
-
-.student strong{font-size:18px}
-
-.student small{display:block;margin:6px 0;color:#665e4e}
-
-.student button{font-size:13px;padding:9px 13px;margin:5px 5px 0 0}
-
-.result{background:#e8f2e5;border-radius:12px;padding:12px;margin-top:12px;font-weight:bold}
-
-.small{font-size:12px;color:#6c6559;line-height:1.6}
-
-</style>
-
-</head>
-
-<body>
-
-<div class="wrap">
-
-<header>
-
-<h1>🎹 クリスマス会2026</h1>
-
-<p>先生用・日程管理の準備版</p>
-
-</header>
-
-<div class="card">
-
-<div class="warn">
-
-<b>先生用・Firebase同期版です。</b>
-
-Googleでログインすると、生徒のレッスン設定をFirebaseに保存できます。今の生徒用アプリはまだ変更されません。
-
-</div>
-
-</div>
-
-<div class="card">
-
-<h2>👧 生徒一覧 <span id="number">0人</span></h2>
-
-<div id="pupils"></div>
-
-<button id="add" style="margin-top:14px;width:100%">＋ 生徒を追加</button>
-
-</div>
-
-<div class="card" id="edit">
-
-<h2 id="editTitle">生徒のレッスン設定</h2>
-
-<label for="name">生徒名（先生用）</label>
-
-<input id="name" placeholder="例：さくら" autocomplete="off">
-
-<label for="event">クリスマス会の日付</label>
-
-<input type="date" id="event" value="2026-12-12">
-
-<label>レッスン曜日（複数選択できます）</label>
-
-<div class="days" id="days">
-
-<label><input type="checkbox" value="1">月</label>
-
-<label><input type="checkbox" value="2">火</label>
-
-<label><input type="checkbox" value="3">水</label>
-
-<label><input type="checkbox" value="4">木</label>
-
-<label><input type="checkbox" value="5">金</label>
-
-<label><input type="checkbox" value="6">土</label>
-
-<label><input type="checkbox" value="0">日</label>
-
-</div>
-
-<label for="holidays">お休みの日（1行に1日）</label>
-
-<textarea id="holidays" placeholder="2026-10-12&#10;2026-11-23"></textarea>
-
-<label for="extras">振替・追加レッスンの日（1行に1日）</label>
-
-<textarea id="extras" placeholder="2026-10-15"></textarea>
-
-<div class="result" id="result">
-
-曜日を選ぶと残り回数が表示されます。
-
-</div>
-
-<div class="actions">
-
-<button class="secondary" id="new">新規入力</button>
-
-<button id="save">この端末に保存</button>
-
-</div>
-
-<p class="small">
-
-※ 先生用の日程はFirebaseに保存されます。生徒用の「あと○回」への反映は次の段階で接続します。
-
-</p>
-
-</div>
-
-<div class="card">
-
-<h2>🔄 Firebase同期</h2>
-
-<p>先生用の日程設定をオンライン保存できる版です。次の段階で、生徒用アプリの「あと○回」と練習記録を同じデータに接続します。</p>
-
-</div>
-
-</div>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>クリスマス会2026｜先生用準備版</title><style>*{box-sizing:border-box}body{margin:0;background:#f9f5eb;color:#304d38;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic ProN',sans-serif}.wrap{max-width:650px;margin:auto;padding:16px 14px 40px}header{background:#28583f;color:#fff;border-radius:20px;padding:22px;text-align:center}h1{font-size:25px;margin:0}header p{margin-bottom:0}.card{background:white;border:1.5px solid #d7c092;border-radius:18px;padding:17px;margin-top:15px}h2{font-size:19px;margin:0 0 14px}.warn{background:#fff0dc;color:#754d29;border-radius:12px;padding:12px;line-height:1.65;font-size:13px}label{display:block;font-weight:bold;margin:12px 0 5px}input:not([type=checkbox]),textarea,select{width:100%;font:inherit;font-size:16px;border:1px solid #c4c9bb;border-radius:10px;padding:12px;background:white}textarea{min-height:78px}.days{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.days label{margin:0;background:#edf5e9;border-radius:10px;padding:10px 6px;display:flex;gap:5px;align-items:center;justify-content:center}.days input{width:20px;height:20px;accent-color:#28583f}.days label:has(input:checked){outline:2px solid #28583f;background:#d8ebd5}button{border:0;border-radius:11px;padding:13px 16px;background:#28583f;color:white;font-weight:700;font-size:16px;cursor:pointer}button.secondary{background:#f2ead9;color:#493b29}button.danger{background:#a33440}.actions{display:flex;gap:9px;margin-top:16px}.actions button{flex:1}.student{border:1px solid #d7c092;border-radius:12px;padding:12px;margin-top:10px}.student strong{font-size:18px}.student small{display:block;margin:6px 0;color:#665e4e}.student button{font-size:13px;padding:9px 13px;margin:5px 5px 0 0}.result{background:#e8f2e5;border-radius:12px;padding:12px;margin-top:12px;font-weight:bold}.small{font-size:12px;color:#6c6559;line-height:1.6}</style></head><body><div class="wrap"><header><h1>🎹 クリスマス会2026</h1><p>先生用・生徒連携版</p></header><div class="card"><div class="warn"><b>先生用・Firebase同期版です。</b> Googleでログインすると、生徒のレッスン設定をFirebaseに保存できます。先生が保存した日程を、生徒用アプリから読み取れる共通データとして保存します。</div></div><div class="card"><h2>👧 生徒一覧 <span id="number">0人</span></h2><div id="pupils"></div><button id="add" style="margin-top:14px;width:100%">＋ 生徒を追加</button></div><div class="card" id="edit"><h2 id="editTitle">生徒のレッスン設定</h2><label for="name">生徒名（先生用）</label><input id="name" placeholder="例：さくら" autocomplete="off"><label for="studentCode">生徒コード（生徒用アプリと同じコード）</label><input id="studentCode" placeholder="例：sakura" autocomplete="off"><label for="event">クリスマス会の日付</label><input type="date" id="event" value="2026-12-12"><label>レッスン曜日（複数選択できます）</label><div class="days" id="days"><label><input type="checkbox" value="1">月</label><label><input type="checkbox" value="2">火</label><label><input type="checkbox" value="3">水</label><label><input type="checkbox" value="4">木</label><label><input type="checkbox" value="5">金</label><label><input type="checkbox" value="6">土</label><label><input type="checkbox" value="0">日</label></div><label for="holidays">お休みの日（1行に1日）</label><textarea id="holidays" placeholder="2026-10-12&#10;2026-11-23"></textarea><label for="extras">振替・追加レッスンの日（1行に1日）</label><textarea id="extras" placeholder="2026-10-15"></textarea><div class="result" id="result">曜日を選ぶと残り回数が表示されます。</div><div class="actions"><button class="secondary" id="new">新規入力</button><button id="save">この端末に保存</button></div><p class="small">※ 保存した日程は生徒用アプリから読み取れる共通データになります。</p></div><div class="card"><h2>🔄 Firebase同期</h2><p>先生用の日程設定をオンライン保存し、生徒用アプリの「あと○回」から読み取れる共通データとして使います。</p></div></div>
+<script>
+(function(){
+  function el(id){return document.getElementById(id)}
+  function daySet(v){return new Set((v||'').split(/[\s,、]+/).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x)))}
+  function key(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+  function showCount(){
+    const event=el('event')?.value;
+    const weekdays=[...document.querySelectorAll('#days input:checked')].map(x=>+x.value);
+    if(!event || !weekdays.length){ el('result').textContent='曜日を選ぶと残り回数が表示されます。'; return; }
+    const off=daySet(el('holidays')?.value), extra=daySet(el('extras')?.value), dates=new Set();
+    let d=new Date(); d.setHours(12,0,0,0);
+    const end=new Date(event+'T12:00:00');
+    for(;d<end;d.setDate(d.getDate()+1)){
+      const k=key(d);
+      if((weekdays.includes(d.getDay()) || extra.has(k)) && !off.has(k)) dates.add(k);
+    }
+    el('result').textContent='本番までのレッスン：あと '+dates.size+' 回';
+  }
+  document.addEventListener('DOMContentLoaded',()=>{
+    document.querySelectorAll('#days input,#event,#holidays,#extras').forEach(x=>{
+      x.addEventListener('change',showCount); x.addEventListener('input',showCount);
+    });
+    showCount();
+  });
+})();
+</script>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-
 import {
-
   getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
-
   getRedirectResult, onAuthStateChanged, signOut
-
 } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-
 import {
-
   getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot
-
 } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
-
   apiKey: "AIzaSyCKRVFmDLB9rDE7thqJ0eo3oOguIHQAGiA",
-
   authDomain: "christmas-piano-2026.firebaseapp.com",
-
   projectId: "christmas-piano-2026",
-
   storageBucket: "christmas-piano-2026.firebasestorage.app",
-
   messagingSenderId: "116033999696",
-
   appId: "1:116033999696:web:1bd98c1e7f157c3e335255"
-
 };
 
 const app = initializeApp(firebaseConfig);
-
 const auth = getAuth(app);
-
 const db = getFirestore(app);
-
 const provider = new GoogleAuthProvider();
-
 const $ = id => document.getElementById(id);
 
 let pupils = [];
-
 let current = null;
-
 let unsubscribe = null;
 
-function daySet(s){
-
-  return new Set((s||'').split(/[\s,、]+/).filter(v=>/^\d{4}-\d{2}-\d{2}$/.test(v)));
-
-}
-
-function dateKey(d){
-
-  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-
-}
-
+function daySet(s){return new Set((s||'').split(/[\s,、]+/).filter(v=>/^\d{4}-\d{2}-\d{2}$/.test(v)))}
+function dateKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function calculate(p){
-
   if(!p.event || !p.weekdays?.length) return null;
-
-  let start=new Date();
-
-  start.setHours(12,0,0,0);
-
-  let end=new Date(p.event+'T12:00:00'),
-
-      off=daySet(p.holidays),
-
-      extra=daySet(p.extras),
-
-      dates=new Set();
-
+  let start=new Date(); start.setHours(12,0,0,0);
+  let end=new Date(p.event+'T12:00:00'), off=daySet(p.holidays), extra=daySet(p.extras), dates=new Set();
   for(let d=new Date(start); d<end; d.setDate(d.getDate()+1)){
-
     let key=dateKey(d);
-
-    if((p.weekdays.includes(d.getDay()) || extra.has(key)) && !off.has(key)){
-
-      dates.add(key);
-
-    }
-
+    if((p.weekdays.includes(d.getDay()) || extra.has(key)) && !off.has(key)) dates.add(key);
   }
-
   return dates.size;
-
 }
-
 function form(){
-
   return {
-
     id: current !== null ? pupils[current]?.id : null,
-
     name:$('name').value.trim(),
-
+    studentCode:$('studentCode').value.trim().toLowerCase(),
     event:$('event').value,
-
     weekdays:[...document.querySelectorAll('#days input:checked')].map(x=>+x.value),
-
     holidays:$('holidays').value,
-
-    extras:$('extras').value,
-
-lessonCount:calculate({event:$('event').value,weekdays:[...document.querySelectorAll('#days input:checked')].map(x=>+x.value),holidays:$('holidays').value,extras:$('extras').value})  };
-
+    extras:$('extras').value
+  };
 }
-
 function preview(){
-
   let p=form(), n=calculate(p);
-
-  $('result').textContent=
-
-    n===null
-
-    ? '曜日と本番日を設定してください。'
-
-    : '本番までのレッスン：あと '+n+' 回';
-
+  $('result').textContent=n===null?'曜日と本番日を設定してください。':'本番までのレッスン：あと '+n+' 回';
 }
-
 function reset(){
-
   current=null;
-
   $('editTitle').textContent='新しい生徒のレッスン設定';
-
   $('name').value='';
-
+  $('studentCode').value='';
   $('event').value='2026-12-12';
-
   $('holidays').value='';
-
   $('extras').value='';
-
   document.querySelectorAll('#days input').forEach(x=>x.checked=false);
-
   preview();
-
 }
-
 function edit(i){
-
-  current=i;
-
-  let p=pupils[i];
-
+  current=i; let p=pupils[i];
   $('editTitle').textContent=p.name+'さんのレッスン設定';
-
-  for(let k of ['name','event','holidays','extras']){
-
-    $(k).value=p[k]||'';
-
-  }
-
-  document.querySelectorAll('#days input')
-
-    .forEach(x=>x.checked=(p.weekdays||[]).includes(+x.value));
-
-  preview();
-
-  $('edit').scrollIntoView({behavior:'smooth'});
-
+  for(let k of ['name','studentCode','event','holidays','extras']) $(k).value=p[k]||'';
+  $('studentCode').value=$('studentCode').value.toLowerCase();
+  document.querySelectorAll('#days input').forEach(x=>x.checked=(p.weekdays||[]).includes(+x.value));
+  preview(); $('edit').scrollIntoView({behavior:'smooth'});
 }
-
 function render(){
-
-  let root=$('pupils');
-
-  root.replaceChildren();
-
-  $('number').textContent=pupils.length+'人';
-
+  let root=$('pupils'); root.replaceChildren(); $('number').textContent=pupils.length+'人';
   pupils.forEach((p,i)=>{
-
-    let div=document.createElement('div');
-
-    div.className='student';
-
-    let title=document.createElement('strong');
-
-    title.textContent=p.name;
-
-    div.appendChild(title);
-
-    let small=document.createElement('small');
-
-    let n=calculate(p);
-
-    small.textContent=
-
-      'レッスン曜日：'+
-
-      (p.weekdays||[]).map(x=>'日月火水木金土'[x]).join('・')+
-
-      '　｜　残り：'+
-
-      (n===null?'未設定':n+'回');
-
+    let div=document.createElement('div'); div.className='student';
+    let title=document.createElement('strong'); title.textContent=p.name; div.appendChild(title);
+    let small=document.createElement('small'); let n=calculate(p);
+    small.textContent='レッスン曜日：'+(p.weekdays||[]).map(x=>'日月火水木金土'[x]).join('・')+'　｜　残り：'+(n===null?'未設定':n+'回');
     div.appendChild(small);
-
-    let b=document.createElement('button');
-
-    b.textContent='設定を編集';
-
-    b.onclick=()=>edit(i);
-
-    div.appendChild(b);
-
-    let del=document.createElement('button');
-
-    del.className='danger';
-
-    del.textContent='削除';
-
-    del.onclick=async()=>{
-
-      if(confirm(p.name+'さんの設定を削除しますか？')){
-
-        await deleteDoc(doc(db,'teacherPupils',p.id));
-
-      }
-
-    };
-
-    div.appendChild(del);
-
-    root.appendChild(div);
-
+    let b=document.createElement('button'); b.textContent='設定を編集'; b.onclick=()=>edit(i); div.appendChild(b);
+    let del=document.createElement('button'); del.className='danger'; del.textContent='削除';
+    del.onclick=async()=>{ if(confirm(p.name+'さんの設定を削除しますか？')) await deleteDoc(doc(db,'teacherPupils',p.id)); };
+    div.appendChild(del); root.appendChild(div);
   });
-
-  if(!pupils.length){
-
-    root.textContent='まだ登録されていません。';
-
-  }
-
+  if(!pupils.length) root.textContent='まだ登録されていません。';
 }
 
 function addLoginCard(){
-
   const wrap=document.querySelector('.wrap');
-
-  const card=document.createElement('div');
-
-  card.className='card';
-
-  card.id='loginCard';
-
-  card.innerHTML=
-
-    '<h2>🔐 先生ログイン</h2>'+
-
-    '<p id="loginStatus">Googleでログインすると、先生用設定をFirebaseに同期できます。</p>'+
-
-    '<div class="actions">'+
-
-    '<button id="loginBtn">Googleでログイン</button>'+
-
-    '<button class="secondary" id="logoutBtn" style="display:none">ログアウト</button>'+
-
-    '</div>';
-
+  const card=document.createElement('div'); card.className='card'; card.id='loginCard';
+  card.innerHTML='<h2>🔐 先生ログイン</h2><p id="loginStatus">Googleでログインすると、先生用設定をFirebaseに同期できます。</p><div class="actions"><button id="loginBtn">Googleでログイン</button><button class="secondary" id="logoutBtn" style="display:none">ログアウト</button></div>';
   wrap.insertBefore(card, wrap.children[1]);
-
   $('loginBtn').onclick=async()=>{
-
-    try{
-
-      await signInWithPopup(auth,provider);
-
-    }catch(e){
-
-      try{
-
-        await signInWithRedirect(auth,provider);
-
-      }catch(err){
-
-        alert('ログインできませんでした。Safariで公開URLを開いて試してください。');
-
-      }
-
-    }
-
+    try { await signInWithPopup(auth,provider); }
+    catch(e){ try { await signInWithRedirect(auth,provider); } catch(err){ alert('ログインできませんでした。Safariで公開URLを開いて試してください。'); } }
   };
-
   $('logoutBtn').onclick=()=>signOut(auth);
-
 }
-
 addLoginCard();
-
 getRedirectResult(auth).catch(()=>{});
 
 onAuthStateChanged(auth,user=>{
-
-  if(unsubscribe){
-
-    unsubscribe();
-
-    unsubscribe=null;
-
-  }
-
+  if(unsubscribe){unsubscribe(); unsubscribe=null;}
   if(user){
-
-    $('loginStatus').textContent=
-
-      'ログイン中：'+
-
-      (user.email||user.displayName||'Googleアカウント');
-
-    $('loginBtn').style.display='none';
-
-    $('logoutBtn').style.display='';
-
-    unsubscribe=onSnapshot(
-
-      collection(db,'teacherPupils'),
-
-      snap=>{
-
-        pupils=snap.docs
-
-          .map(d=>({id:d.id,...d.data()}))
-
-          .sort((a,b)=>(a.name||'').localeCompare(b.name||'','ja'));
-
-        render();
-
-        reset();
-
-      },
-
-      ()=>{
-
-        alert('Firestoreを読み込めません。セキュリティルールを確認してください。');
-
-      }
-
-    );
-
-  }else{
-
-    pupils=[];
-
-    render();
-
-    reset();
-
-    $('loginStatus').textContent=
-
-      'Googleでログインすると、先生用設定をFirebaseに同期できます。';
-
-    $('loginBtn').style.display='';
-
-    $('logoutBtn').style.display='none';
-
+    $('loginStatus').textContent='ログイン中：'+(user.email||user.displayName||'Googleアカウント');
+    $('loginBtn').style.display='none'; $('logoutBtn').style.display='';
+    unsubscribe=onSnapshot(collection(db,'teacherPupils'),snap=>{
+      pupils=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.name||'').localeCompare(b.name||'','ja'));
+      render(); reset();
+    },()=>alert('Firestoreを読み込めません。セキュリティルールを確認してください。'));
+  } else {
+    pupils=[]; render(); reset();
+    $('loginStatus').textContent='Googleでログインすると、先生用設定をFirebaseに同期できます。';
+    $('loginBtn').style.display=''; $('logoutBtn').style.display='none';
   }
-
 });
 
 $('save').textContent='Firebaseに保存';
-
 $('save').onclick=async()=>{
-
-  if(!auth.currentUser){
-
-    alert('先に先生としてGoogleログインしてください。');
-
-    return;
-
-  }
-
+  if(!auth.currentUser){alert('先に先生としてGoogleログインしてください。');return;}
   let p=form();
-
-  if(!p.name){
-
-    alert('生徒名を入力してください');
-
-    return;
-
-  }
-
-  if(!p.weekdays.length){
-
-    alert('レッスン曜日を選択してください');
-
-    return;
-
-  }
-
+  if(!p.name){alert('生徒名を入力してください');return;}
+  if(!p.studentCode){alert('生徒コードを入力してください');return;}
+  if(!p.weekdays.length){alert('レッスン曜日を選択してください');return;}
   try{
-
-    const ref=p.id||p.name
-
-      ? doc(db,'teacherPupils',ref)
-
-      : doc(collection(db,'teacherPupils'));
-
-    const data={
-
-      name:p.name,
-
-      event:p.event,
-
-      weekdays:p.weekdays,
-lessonCount:p.lessonCount||0,
-      holidays:p.holidays,
-
-      extras:p.extras,
-
-      updatedAt:new Date().toISOString(),
-
-      updatedBy:auth.currentUser.uid
-
-    };
-
+    const ref=p.id ? doc(db,'teacherPupils',p.id) : doc(collection(db,'teacherPupils'));
+    const data={name:p.name,studentCode:p.studentCode,event:p.event,weekdays:p.weekdays,holidays:p.holidays,extras:p.extras,updatedAt:new Date().toISOString(),updatedBy:auth.currentUser.uid};
     await setDoc(ref,data,{merge:true});
-
-    alert('Firebaseに保存しました.');
-
-  }catch(e){
-
-    alert('保存できませんでした。Firestoreのルールを確認してください。');
-
-  }
-
+    await setDoc(doc(db,'studentSchedules',p.studentCode),data,{merge:true});
+    alert('Firebaseに保存しました。生徒用連携データも更新しました。');
+  }catch(e){alert('保存できませんでした。Firestoreのルールを確認してください。');}
 };
-
-$('add').onclick=()=>{
-
-  reset();
-
-  $('edit').scrollIntoView({behavior:'smooth'});
-
-};
-
+$('add').onclick=()=>{reset();$('edit').scrollIntoView({behavior:'smooth'})};
 $('new').onclick=reset;
-
-document.querySelectorAll('#edit input,#edit textarea')
-
-  .forEach(x=>x.addEventListener('input',preview));
-
-document.querySelectorAll('#days input')
-
-  .forEach(x=>x.addEventListener('change',preview));
-
-render();
-
-reset();
-
-</script>
-
-</body>
-
-</html>
+document.querySelectorAll('#edit input,#edit textarea').forEach(x=>x.addEventListener('input',preview));
+document.querySelectorAll('#days input').forEach(x=>x.addEventListener('change',preview));
+render(); reset();
+</script></body></html>
