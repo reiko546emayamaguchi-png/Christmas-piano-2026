@@ -34,8 +34,7 @@ async function ensureAuth(){if(!auth.currentUser)await signInAnonymously(auth)}
 function studentPracticeKey(code){return 'christmas2026_practice_'+code}
 function saveCurrentPractice(){
   if(!active)return;
-
-  if(!window.practiceBridge){return;}const d=window.practiceBridge.get();
+  const d=window.practiceBridge.get();
   localStorage.setItem(studentPracticeKey(active),JSON.stringify({age:d.age||'',song:d.song||'',days:d.days||{}}));
 }
 function loadOwnPractice(code){
@@ -73,7 +72,6 @@ async function switchStudent(code){
       name:p.name||'', age:own.age||'', song:own.song||'',
       eventDate:p.event||'2026-12-12',
       weekdays:Array.isArray(p.weekdays)?p.weekdays:[],
-      lessonCount:p.lessonCount||0,
       holidays:p.holidays||'', extras:p.extras||'', days:own.days||{}
     });
     codeInput.value=code; renderTabs();
