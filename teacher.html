@@ -110,6 +110,19 @@ function render(){
     small.textContent='レッスン曜日：'+(p.weekdays||[]).map(x=>'日月火水木金土'[x]).join('・')+'　｜　残り：'+(n===null?'未設定':n+'回');
     div.appendChild(small);
     let b=document.createElement('button'); b.textContent='設定を編集'; b.onclick=()=>edit(i); div.appendChild(b);
+    let reward=document.createElement('button');
+    reward.textContent=p.readingDone?'🎹 特別ボーナス済み（取り消す）':'🎁 譜読み完了・特別ボーナス';
+    reward.onclick=async()=>{
+      if(!p.studentCode){alert('先に生徒コードを設定してください。');return;}
+      const next=!p.readingDone;
+      if(!confirm(p.name+'さんの特別ボーナスを'+(next?'プレゼント':'取り消し')+'しますか？'))return;
+      try{
+        const x={readingDone:next,readingDoneAt:next?new Date().toISOString():null};
+        await setDoc(doc(db,'teacherPupils',p.id),x,{merge:true});
+        await setDoc(doc(db,'studentSchedules',p.studentCode),x,{merge:true});
+      }catch(e){alert('保存できませんでした。');}
+    };
+    div.appendChild(reward);
     let del=document.createElement('button'); del.className='danger'; del.textContent='削除';
     del.onclick=async()=>{ if(confirm(p.name+'さんの設定を削除しますか？')) await deleteDoc(doc(db,'teacherPupils',p.id)); };
     div.appendChild(del); root.appendChild(div);
