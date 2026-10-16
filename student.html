@@ -61,7 +61,7 @@ for(let i=0;i<Math.min(n,56);i++){
 </script><script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import {getAuth,signInAnonymously} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-import {getFirestore,doc,getDoc} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+import {getFirestore,doc,getDoc,collection,query,where,getDocsFromServer,getDocFromServer} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 const config={"apiKey":"AIzaSyCKRVFmDLB9rDE7thqJ0eo3oOguIHQAGiA","authDomain":"christmas-piano-2026.firebaseapp.com","projectId":"christmas-piano-2026","storageBucket":"christmas-piano-2026.firebasestorage.app","messagingSenderId":"116033999696","appId":"1:116033999696:web:1bd98c1e7f157c3e335255"};
 const app=initializeApp(config),auth=getAuth(app),db=getFirestore(app);
 const status=document.getElementById('sync-status'),codeInput=document.getElementById('student-code');
@@ -81,6 +81,38 @@ function loadOwnPractice(code){
   let own={};try{own=JSON.parse(localStorage.getItem(studentPracticeKey(code)))||{}}catch(e){}
   return own;
 }
+function removeDeletedCode(code){
+  family=family.filter(x=>x.code!==code);
+  localStorage.setItem(FAMILY_KEY,JSON.stringify(family));
+  if(active===code){
+    active='';localStorage.removeItem(ACTIVE_KEY);codeInput.value='';
+    window.practiceBridge.set({name:'',age:'',song:'',days:{},weekdays:[],weekday:'',holidays:'',extras:'',readingDone:false,eventDate:'2026-12-12'});
+  }
+  renderTabs();
+}
+let checkingFamily=false;
+async function checkDeletedStudents(){
+  if(checkingFamily)return;
+  checkingFamily=true;
+  try{
+    await ensureAuth();
+    for(const entry of [...family]){
+      try{
+        // Server-only reads: an offline/cache miss must never remove a pupil.
+        const schedule=await getDocFromServer(doc(db,'studentSchedules',entry.code));
+        let deleted=!schedule.exists();
+        if(!deleted){
+          // Older teacher versions left orphan schedules after deletion/code changes.
+          const owners=await getDocsFromServer(query(collection(db,'teacherPupils'),where('studentCode','==',entry.code)));
+          deleted=owners.empty;
+        }
+        if(deleted)removeDeletedCode(entry.code);
+      }catch(e){ /* Network/permission errors leave the registration untouched. */ }
+    }
+    if(!active && family.length)await switchStudent(family[0].code);
+    else if(!active)status.textContent='先生からもらった生徒コードを入力してください。';
+  }finally{checkingFamily=false;}
+}
 function renderTabs(){
   tabs.innerHTML='';
   family.forEach(x=>{
@@ -95,7 +127,11 @@ function renderTabs(){
 async function fetchTeacher(code){
   await ensureAuth();
   const snap=await getDoc(doc(db,'studentSchedules',code));
-  if(!snap.exists())throw new Error('その生徒コードは見つかりませんでした。');
+  if(!snap.exists()){
+    const error=new Error('その生徒コードは見つかりませんでした。');
+    if(!snap.metadata.fromCache)error.deletedStudent=true;
+    throw error;
+  }
   return snap.data();
 }
 async function switchStudent(code){
@@ -116,7 +152,14 @@ async function switchStudent(code){
     });
     codeInput.value=code; renderTabs();
     status.textContent='先生の設定を読み込みました：'+(p.name||code);
-  }catch(e){status.textContent='読み込めませんでした：'+e.message}
+  }catch(e){
+    if(e.deletedStudent){
+      removeDeletedCode(code);
+      const next=family[0];
+      if(!active && next)await switchStudent(next.code);
+      else status.textContent='先生が削除した生徒コードを一覧から外しました。';
+    }else status.textContent='読み込めませんでした：'+e.message;
+  }
 }
 document.getElementById('load-teacher').onclick=async()=>{
   const code=(codeInput.value||'').trim().toLowerCase();
@@ -130,5 +173,11 @@ document.getElementById('add-sibling').onclick=async()=>{
 };
 window.addEventListener('beforeunload',saveCurrentPractice);
 setInterval(()=>{if(active)saveCurrentPractice()},1500);
-if(active) switchStudent(active); else renderTabs();
+async function startStudents(){
+  await checkDeletedStudents();
+  if(active)await switchStudent(active);else renderTabs();
+}
+startStudents().catch(()=>{if(active)switchStudent(active);else renderTabs();});
+window.addEventListener('online',()=>checkDeletedStudents());
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkDeletedStudents();});
 </script></body></html>

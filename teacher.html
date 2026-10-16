@@ -33,7 +33,7 @@ import {
   getRedirectResult, onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 import {
-  getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot
+  getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch
 } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -124,7 +124,15 @@ function render(){
     };
     div.appendChild(reward);
     let del=document.createElement('button'); del.className='danger'; del.textContent='削除';
-    del.onclick=async()=>{ if(confirm(p.name+'さんの設定を削除しますか？')) await deleteDoc(doc(db,'teacherPupils',p.id)); };
+    del.onclick=async()=>{
+      if(!confirm(p.name+'さんの設定を削除しますか？'))return;
+      try{
+        const batch=writeBatch(db);
+        batch.delete(doc(db,'teacherPupils',p.id));
+        if(p.studentCode)batch.delete(doc(db,'studentSchedules',p.studentCode));
+        await batch.commit();
+      }catch(e){alert('削除できませんでした。通信状態を確認して、もう一度お試しください。');}
+    };
     div.appendChild(del); root.appendChild(div);
   });
   if(!pupils.length) root.textContent='まだ登録されていません。';
@@ -164,14 +172,18 @@ $('save').textContent='Firebaseに保存';
 $('save').onclick=async()=>{
   if(!auth.currentUser){alert('先に先生としてGoogleログインしてください。');return;}
   let p=form();
+  const previousCode=current!==null?pupils[current]?.studentCode:null;
   if(!p.name){alert('生徒名を入力してください');return;}
   if(!p.studentCode){alert('生徒コードを入力してください');return;}
   if(!p.weekdays.length){alert('レッスン曜日を選択してください');return;}
   try{
     const ref=p.id ? doc(db,'teacherPupils',p.id) : doc(collection(db,'teacherPupils'));
     const data={name:p.name,studentCode:p.studentCode,event:p.event,weekdays:p.weekdays,holidays:p.holidays,extras:p.extras,updatedAt:new Date().toISOString(),updatedBy:auth.currentUser.uid};
-    await setDoc(ref,data,{merge:true});
-    await setDoc(doc(db,'studentSchedules',p.studentCode),data,{merge:true});
+    const batch=writeBatch(db);
+    batch.set(ref,data,{merge:true});
+    batch.set(doc(db,'studentSchedules',p.studentCode),data,{merge:true});
+    if(previousCode && previousCode!==p.studentCode)batch.delete(doc(db,'studentSchedules',previousCode));
+    await batch.commit();
     alert('Firebaseに保存しました。生徒用連携データも更新しました。');
   }catch(e){alert('保存できませんでした。Firestoreのルールを確認してください。');}
 };
