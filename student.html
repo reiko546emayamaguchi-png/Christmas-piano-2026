@@ -69,11 +69,12 @@ const siblingInput=document.getElementById('sibling-code'),tabs=document.getElem
 const FAMILY_KEY='christmas2026_family_codes_v1', ACTIVE_KEY='christmas2026_active_code_v1';
 let family=[]; try{family=JSON.parse(localStorage.getItem(FAMILY_KEY))||[]}catch(e){}
 let active=localStorage.getItem(ACTIVE_KEY)||'';
+let practiceLoadedCode='';
 
 async function ensureAuth(){if(!auth.currentUser)await signInAnonymously(auth)}
 function studentPracticeKey(code){return 'christmas2026_practice_'+code}
 function saveCurrentPractice(){
-  if(!active)return;
+  if(!active || practiceLoadedCode!==active)return;
   const d=window.practiceBridge.get();
   localStorage.setItem(studentPracticeKey(active),JSON.stringify({age:d.age||'',song:d.song||'',days:d.days||{}}));
 }
@@ -85,7 +86,7 @@ function removeDeletedCode(code){
   family=family.filter(x=>x.code!==code);
   localStorage.setItem(FAMILY_KEY,JSON.stringify(family));
   if(active===code){
-    active='';localStorage.removeItem(ACTIVE_KEY);codeInput.value='';
+    active='';practiceLoadedCode='';localStorage.removeItem(ACTIVE_KEY);codeInput.value='';
     window.practiceBridge.set({name:'',age:'',song:'',days:{},weekdays:[],weekday:'',holidays:'',extras:'',readingDone:false,eventDate:'2026-12-12'});
   }
   renderTabs();
@@ -150,6 +151,7 @@ async function switchStudent(code){
       weekdays:Array.isArray(p.weekdays)?p.weekdays:[],
       holidays:p.holidays||'', extras:p.extras||'', readingDone:!!p.readingDone, days:own.days||{}
     });
+    practiceLoadedCode=code;
     codeInput.value=code; renderTabs();
     status.textContent='先生の設定を読み込みました：'+(p.name||code);
   }catch(e){
@@ -174,6 +176,7 @@ document.getElementById('add-sibling').onclick=async()=>{
 window.addEventListener('beforeunload',saveCurrentPractice);
 setInterval(()=>{if(active)saveCurrentPractice()},1500);
 async function startStudents(){
+  renderTabs();codeInput.value=active;
   await checkDeletedStudents();
   if(active)await switchStudent(active);else renderTabs();
 }
