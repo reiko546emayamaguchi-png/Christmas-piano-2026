@@ -54,6 +54,33 @@ const $ = id => document.getElementById(id);
 let pupils = [];
 let current = null;
 let unsubscribe = null;
+let unsubscribeReports=null,practiceReports=[],reportError=false;
+function practiceSummary(p){
+  const reports=practiceReports.filter(r=>r.studentCode===p.studentCode);
+  if(!reports.length)return null;
+  const days={};let updated='';
+  for(const r of reports){
+    if(typeof r.updatedAt==='string'&&r.updatedAt>updated)updated=r.updatedAt;
+    for(const [day,v]of Object.entries(r.days||{})){
+      if(/^\d{4}-\d{2}-\d{2}$/.test(day)&&Number.isFinite(v)&&v>=0)days[day]=Math.max(days[day]||0,Math.floor(v));
+    }
+  }
+  const end=p.event||'2026-12-12',startDate=new Date(end+'T12:00:00');startDate.setDate(startDate.getDate()-55);
+  const start=dateKey(startDate),today=dateKey(new Date());
+  return {today:today>=start&&today<=end?(days[today]||0):0,
+    ornaments:Math.min(56,Object.entries(days).filter(([day,v])=>day>=start&&day<=end&&v>=5).length),updated,devices:reports.length};
+}
+function renderPracticeStatus(){
+  document.querySelectorAll('[data-practice-code]').forEach(el=>{
+    const p=pupils.find(x=>x.studentCode===el.dataset.practiceCode);if(!p)return;
+    const summary=practiceSummary(p);
+    if(reportError){el.textContent='練習状況：取得できません。時間をおいて再読み込みしてください。';return}
+    if(!summary){el.textContent='練習状況：未受信（生徒が更新版を開くと表示されます）';return}
+    const updated=new Date(summary.updated);
+    el.textContent='🎹 今日 '+summary.today+'回　｜　♪ オーナメント '+summary.ornaments+'個　｜　最終受信 '+(isNaN(updated)?'不明':updated.toLocaleString('ja-JP'));
+    if(summary.devices>1)el.textContent+='　※複数端末：同日の回数は最大値で集計';
+  });
+}
 
 function daySet(s){return new Set((s||'').split(/[\s,、]+/).filter(v=>/^\d{4}-\d{2}-\d{2}$/.test(v)))}
 function dateKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -109,6 +136,7 @@ function render(){
     let small=document.createElement('small'); let n=calculate(p);
     small.textContent='レッスン曜日：'+(p.weekdays||[]).map(x=>'日月火水木金土'[x]).join('・')+'　｜　残り：'+(n===null?'未設定':n+'回');
     div.appendChild(small);
+    const progress=document.createElement('p');progress.dataset.practiceCode=p.studentCode||'';progress.style.cssText='background:#f1f6ed;padding:10px;border-radius:10px;font-size:14px;line-height:1.7';div.appendChild(progress);
     let b=document.createElement('button'); b.textContent='設定を編集'; b.onclick=()=>edit(i); div.appendChild(b);
     let reward=document.createElement('button');
     reward.textContent=p.readingDone?'🎹 特別ボーナス済み（取り消す）':'🎁 譜読み完了・特別ボーナス';
@@ -136,6 +164,7 @@ function render(){
     div.appendChild(del); root.appendChild(div);
   });
   if(!pupils.length) root.textContent='まだ登録されていません。';
+  renderPracticeStatus();
 }
 
 function addLoginCard(){
@@ -154,7 +183,10 @@ getRedirectResult(auth).catch(()=>{});
 
 onAuthStateChanged(auth,user=>{
   if(unsubscribe){unsubscribe(); unsubscribe=null;}
+  if(unsubscribeReports){unsubscribeReports();unsubscribeReports=null;}
+  practiceReports=[];reportError=false;
   if(user){
+    unsubscribeReports=onSnapshot(collection(db,'practiceReports'),snap=>{practiceReports=snap.docs.map(d=>d.data());reportError=false;renderPracticeStatus()},()=>{reportError=true;renderPracticeStatus()});
     $('loginStatus').textContent='ログイン中：'+(user.email||user.displayName||'Googleアカウント');
     $('loginBtn').style.display='none'; $('logoutBtn').style.display='';
     unsubscribe=onSnapshot(collection(db,'teacherPupils'),snap=>{
@@ -162,7 +194,7 @@ onAuthStateChanged(auth,user=>{
       render(); reset();
     },()=>alert('Firestoreを読み込めません。セキュリティルールを確認してください。'));
   } else {
-    pupils=[]; render(); reset();
+    pupils=[];practiceReports=[]; render(); reset();
     $('loginStatus').textContent='Googleでログインすると、先生用設定をFirebaseに同期できます。';
     $('loginBtn').style.display=''; $('logoutBtn').style.display='none';
   }
@@ -192,4 +224,6 @@ $('new').onclick=reset;
 document.querySelectorAll('#edit input,#edit textarea').forEach(x=>x.addEventListener('input',preview));
 document.querySelectorAll('#days input').forEach(x=>x.addEventListener('change',preview));
 render(); reset();
+setInterval(renderPracticeStatus,60000);
 </script></body></html>
+
