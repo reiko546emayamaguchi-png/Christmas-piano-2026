@@ -139,15 +139,34 @@ function render(){
     const progress=document.createElement('p');progress.dataset.practiceCode=p.studentCode||'';progress.style.cssText='background:#f1f6ed;padding:10px;border-radius:10px;font-size:14px;line-height:1.7';div.appendChild(progress);
     let b=document.createElement('button'); b.textContent='設定を編集'; b.onclick=()=>edit(i); div.appendChild(b);
     let reward=document.createElement('button');
-    reward.textContent=p.readingDone?'🎹 特別ボーナス済み（取り消す）':'🎁 譜読み完了・特別ボーナス';
+    reward.textContent=p.readingDone?'🌸 特別ボーナス（編集・取消）':'🎁 譜読み完了・特別ボーナス';
     reward.onclick=async()=>{
       if(!p.studentCode){alert('先に生徒コードを設定してください。');return;}
-      const next=!p.readingDone;
-      if(!confirm(p.name+'さんの特別ボーナスを'+(next?'プレゼント':'取り消し')+'しますか？'))return;
+      let details=null;
+      if(p.readingDone){
+        const action=prompt('ボーナスの文章を変更する場合は「編集」、取り消す場合は「取消」と入力してください。','編集');
+        if(action===null)return;
+        if(action==='取消'){
+          if(!confirm(p.name+'さんの特別ボーナスを取り消しますか？'))return;
+          details={readingDone:false,readingDoneAt:null,readingDoneDate:null,readingRewardName:null,readingMessage:null};
+        }else if(action!=='編集')return;
+      }
+      if(!details){
+        const name=prompt('ボーナスに表示する名前（「さん」は自動で付きます）',p.readingRewardName||p.name||'');if(name===null)return;
+        if(!name.trim()){alert('名前を入力してください。');return;}
+        const date=prompt('譜読み完了日（例：2026-10-19）',p.readingDoneDate||(p.readingDoneAt?dateKey(new Date(p.readingDoneAt)):dateKey(new Date())));if(date===null)return;
+        const parsed=new Date(date+'T12:00:00');
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||isNaN(parsed)||dateKey(parsed)!==date){alert('日付を2026-10-19の形式で入力してください。');return;}
+        const message=prompt('メッセージ',p.readingMessage||'よく頑張りました♪');if(message===null)return;
+        if(!confirm(name.trim()+'さん\n'+date+'　譜読み完了\n'+message+'\n\nこの内容で贈りますか？'))return;
+        details={readingDone:true,readingDoneAt:p.readingDoneAt||new Date().toISOString(),readingDoneDate:date,readingRewardName:name.trim(),readingMessage:message};
+      }
       try{
-        const x={readingDone:next,readingDoneAt:next?new Date().toISOString():null};
-        await setDoc(doc(db,'teacherPupils',p.id),x,{merge:true});
-        await setDoc(doc(db,'studentSchedules',p.studentCode),x,{merge:true});
+        const batch=writeBatch(db);
+        batch.set(doc(db,'teacherPupils',p.id),details,{merge:true});
+        batch.set(doc(db,'studentSchedules',p.studentCode),details,{merge:true});
+        await batch.commit();
+        alert('保存しました。生徒用画面で「先生の設定を読み込む」を押すと反映されます。');
       }catch(e){alert('保存できませんでした。');}
     };
     div.appendChild(reward);
@@ -226,4 +245,5 @@ document.querySelectorAll('#days input').forEach(x=>x.addEventListener('change',
 render(); reset();
 setInterval(renderPracticeStatus,60000);
 </script></body></html>
+
 
