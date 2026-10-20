@@ -189,6 +189,17 @@ function edit(i){
   document.querySelectorAll('#days input').forEach(x=>x.checked=(p.weekdays||[]).includes(+x.value));
   preview(); $('edit').scrollIntoView({behavior:'smooth'});
 }
+function readingCompletionLabel(p){
+  if(!p.readingDone)return '📖 譜読み：未完了';
+  const raw=typeof p.readingDoneDate==='string'?p.readingDoneDate:'';
+  let date=null;
+  if(/^\d{4}-\d{2}-\d{2}$/.test(raw)){
+    const parsed=new Date(raw+'T12:00:00');
+    if(!isNaN(parsed)&&dateKey(parsed)===raw)date=parsed;
+  }
+  if(!date&&p.readingDoneAt){const parsed=new Date(p.readingDoneAt);if(!isNaN(parsed))date=parsed;}
+  return '📖 譜読み完了：'+(date?(date.getMonth()+1)+'月'+date.getDate()+'日':'日付未設定');
+}
 function render(){
   let root=$('pupils'); root.replaceChildren(); $('number').textContent=pupils.length+'人';
   pupils.forEach((p,i)=>{
@@ -197,6 +208,10 @@ function render(){
     let small=document.createElement('small'); let n=calculate(p);
     small.textContent='レッスン曜日：'+(p.weekdays||[]).map(x=>'日月火水木金土'[x]).join('・')+'　｜　残り：'+(n===null?'未設定':n+'回');
     div.appendChild(small);
+    const readingStatus=document.createElement('p');
+    readingStatus.className='reading-completion';
+    readingStatus.style.cssText='margin:10px 0;font-size:14px;font-weight:700;line-height:1.6;color:#28583f';
+    readingStatus.textContent=readingCompletionLabel(p);div.appendChild(readingStatus);
     const progress=document.createElement('p');progress.dataset.practiceCode=p.studentCode||'';progress.style.cssText='background:#f1f6ed;padding:10px;border-radius:10px;font-size:14px;line-height:1.7';div.appendChild(progress);
     const details=document.createElement('details');details.className='practice-details';details.dataset.calendarCode=p.studentCode||'';
     const calendarToggle=document.createElement('summary');calendarToggle.textContent='📅 練習カレンダーを見る';details.appendChild(calendarToggle);
